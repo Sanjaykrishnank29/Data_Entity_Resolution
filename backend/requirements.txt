@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic
+sqlalchemy
+pandas
+python-dateutil
+rapidfuzz
+jellyfish
+networkx
+websockets
+ollama
+httpx
+python-multipart
+jinja2
+watchdog
