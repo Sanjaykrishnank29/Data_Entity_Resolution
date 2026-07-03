@@ -1,0 +1,24 @@
+[project]
+name = "data-entity-resolution"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.136.3",
+    "httpx>=0.28.1",
+    "jellyfish>=1.2.1",
+    "jinja2>=3.1.6",
+    "networkx>=3.6.1",
+    "ollama>=0.6.2",
+    "pandas>=3.0.3",
+    "pydantic>=2.13.4",
+    "pytest>=9.0.3",
+    "python-dateutil>=2.9.0.post0",
+    "python-multipart>=0.0.32",
+    "rapidfuzz>=3.14.5",
+    "sqlalchemy>=2.0.50",
+    "uvicorn[standard]>=0.49.0",
+    "watchdog>=6.0.0",
+    "websockets>=16.0",
+]

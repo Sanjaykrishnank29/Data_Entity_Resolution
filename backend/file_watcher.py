@@ -5,12 +5,11 @@ Any new CSV dropped is detected within 1 second -> auto-triggers full pipeline.
 import os
 import asyncio
 import time
-from datetime import datetime
-from typing import Callable
+from typing import Callable, Optional
 
 try:
     from watchdog.observers import Observer
-    from watchdog.events import FileSystemEventHandler, FileCreatedEvent
+    from watchdog.events import FileSystemEventHandler
     WATCHDOG_AVAILABLE = True
 except ImportError:
     WATCHDOG_AVAILABLE = False
@@ -52,7 +51,8 @@ class CSVDropHandler(FileSystemEventHandler):
                     print(f"[WATCHER] Error triggering callback: {exc}")
 
 
-_observer: Observer = None
+# pyrefly: ignore [not-a-type]
+_observer: Optional["Observer"] = None
 
 
 def start_file_watcher(data_dir: str, callback: Callable, loop: asyncio.AbstractEventLoop):

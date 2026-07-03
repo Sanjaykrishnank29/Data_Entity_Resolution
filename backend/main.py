@@ -104,7 +104,7 @@ app = FastAPI(title="DataDNA Resolution Engine", version="2.0.0", lifespan=lifes
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], ## prd side : allow_origins=["https://yourfrontend.com"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -359,8 +359,8 @@ async def run_pipeline_task(dfs: List[pd.DataFrame]):
         from graph_builder import add_node, add_edge, reset_graph
         reset_graph()
 
-        for i, row in combined.iterrows():
-            if i % 100 == 0:
+        for idx, (i, row) in enumerate(combined.iterrows()):
+            if idx % 100 == 0:
                 await asyncio.sleep(0)  # Yield control
             rid = str(row["record_id"])
             add_node(row.to_dict())
@@ -995,15 +995,17 @@ async def run_query(body: QueryRequest, db: Session = Depends(get_db)):
             return {"results": results, "count": len(results), "ai_interpreted": False, "query": safe_q}
 
         # ── LLM: Generate SQL ──────────────────────────────────────────────────
+        MODEL = "phi3:mini"
         sql_prompt = (
             f"You are a SQLite expert for a Master Patient Index system. "
             f"Based on this schema: {SCHEMA_INFO}, "
             f"write a SQL query to answer: '{q}'. "
             f"Assume table name is 'golden_records'. "
+            f"Always SELECT * to ensure the frontend table can render the full record. "
             f"Output ONLY the raw SQL code, no markdown, no explanation."
         )
         
-        # Use asyncio.to_thread for the blocking ollama call
+        # Call local Ollama AI
         response = await asyncio.to_thread(ollama.generate, model=MODEL, prompt=sql_prompt)
         generated_sql = response['response'].strip().replace('```sql', '').replace('```', '')
         
@@ -1032,7 +1034,7 @@ async def run_query(body: QueryRequest, db: Session = Depends(get_db)):
             "executed_sql": generated_sql,
             "query": q
         }
-
+        
     except Exception as e:
         print(f"[QUERY ERROR] {e}")
         # Standard fallback for common intents if LLM fails
@@ -1040,9 +1042,29 @@ async def run_query(body: QueryRequest, db: Session = Depends(get_db)):
         if "allergy" in q_low:
             recs = db.query(GoldenRecord).filter(GoldenRecord.allergy_critical == True).limit(20).all()
             results = [{"patient_id": r.patient_id, "full_name": r.full_name, "allergy": str(r.allergy)} for r in recs]
-            return {"results": results, "count": len(results), "ai_interpreted": False, "query": q}
+            return {"results": results, "count": len(results), "ai_interpreted": False, "query": q, "ai_answer": "Found these records with allergy conflicts."}
         
-        return {"error": str(e), "results": [], "query": q}
+        # General text search fallback if AI is bypassed
+        search_term = f"%{q}%"
+        recs = db.query(GoldenRecord).filter(
+            (GoldenRecord.full_name.ilike(search_term)) | 
+            (GoldenRecord.phone.ilike(search_term)) |
+            (GoldenRecord.email.ilike(search_term)) |
+            (GoldenRecord.patient_id.ilike(search_term))
+        ).limit(50).all()
+        
+        if recs:
+            results = [
+                {
+                    "patient_id": r.patient_id, "full_name": r.full_name, "dob": r.dob, 
+                    "phone": r.phone, "email": r.email, "insurance_id": r.insurance_id, 
+                    "address": r.address, "data_quality_score": r.data_quality_score, 
+                    "sources_count": r.sources_count
+                } for r in recs
+            ]
+            return {"results": results, "count": len(results), "ai_interpreted": False, "query": q, "ai_answer": f"AI bypassed. Found {len(results)} records via fallback search."}
+        
+        return {"error": "No matching records found.", "query": q}
 
 
 # ── Privacy Endpoints ─────────────────────────────────────────────────────────

@@ -2,12 +2,12 @@ import sys
 import os
 import pandas as pd
 
-sys.path.insert(0, r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\backend")
+sys.path.insert(0, r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\backend")
 from blocking import get_candidate_pairs
 from main import auto_schema_match
 from normalize import normalize_all
 
-csv_path = r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\data\Source_A_Hospital (2).csv"
+csv_path = r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\data\Source_A_Hospital (2).csv"
 print(f"Loading {csv_path}...")
 df = pd.read_csv(csv_path)
 print(f"Shape: {df.shape}")

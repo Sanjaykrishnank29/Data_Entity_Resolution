@@ -6,7 +6,7 @@ import asyncio
 import random
 import uuid
 from datetime import datetime, date
-from typing import List
+from typing import List, Optional
 
 
 # Sample pool for generating realistic fake patient records
@@ -68,7 +68,7 @@ def generate_fake_record() -> dict:
 
 
 # Global queue for records waiting to be broadcast
-_live_feed_queue: asyncio.Queue = None
+_live_feed_queue: Optional[asyncio.Queue] = None
 _live_feed_task = None
 
 

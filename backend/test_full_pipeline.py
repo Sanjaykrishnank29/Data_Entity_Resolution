@@ -4,7 +4,7 @@ import asyncio
 import pandas as pd
 import time
 
-sys.path.insert(0, r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\backend")
+sys.path.insert(0, r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\backend")
 
 # We will patch broadcast_log to print to terminal directly since we have no WebSockets
 import main
@@ -15,11 +15,11 @@ async def terminal_broadcast(msg):
 main.broadcast_log = terminal_broadcast
 
 async def run_end_to_end_test():
-    file1 = r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\data\Source_A_Hospital (2).csv"
-    file2 = r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\data\Source_B_Lab (2).csv"
+    file1 = r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\data\Source_A_Hospital (2).csv"
+    file2 = r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\data\Source_B_Lab (2).csv"
     
     print("\n" + "="*60)
-    print("🚀 INFYND TERMINAL ENGINE TEST: START TO END 🚀")
+    print("INFYND TERMINAL ENGINE TEST: START TO END")
     print("="*60)
     
     print(f"\n[FRONTEND] Found User Data sources:\n1. {file1}\n2. {file2}")
@@ -45,7 +45,7 @@ async def run_end_to_end_test():
     end_t = time.time()
     
     print("\n" + "="*60)
-    print(f"✅ PIPELINE SUCCESSFUL IN {end_t - start_t:.2f} seconds!")
+    print(f"PIPELINE SUCCESSFUL IN {end_t - start_t:.2f} seconds!")
     print("="*60 + "\n")
 
     # Fetch results from DB

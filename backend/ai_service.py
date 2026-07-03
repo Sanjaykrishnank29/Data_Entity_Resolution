@@ -3,13 +3,13 @@ import logging
 from typing import List, Dict, Any
 import ollama
 
-# Configure local Llama 3 connection
-MODEL_NAME = "llama3:latest"
+# Configure local connection
+MODEL_NAME = "phi3:mini"
 
 def get_clinical_expert_opinion(record1: dict, record2: dict, conflicts: list) -> Dict[str, Any]:
     """
     Expert AI Decision Support:
-    Sends record fragments + conflicts to local Llama 3 to get a natural language reasoning for the Review Screen.
+    Sends record fragments + conflicts to local LLM to get a natural language reasoning for the Review Screen.
     """
     
     system_prompt = """
@@ -36,44 +36,46 @@ def get_clinical_expert_opinion(record1: dict, record2: dict, conflicts: list) -
     }
     """
 
-    # Strip private SQLAlchemy state before sending to LLM
-    r1_clean = {k: v for k, v in record1.items() if not k.startswith('_')}
-    r2_clean = {k: v for k, v in record2.items() if not k.startswith('_')}
-
-    user_content = f"""
-    COMPARING RECORDS:
-    A: {r1_clean}
-    B: {r2_clean}
+    user_prompt = f"""
+    Compare these two candidate records:
+    Record 1: {json.dumps(record1, default=str)}
+    Record 2: {json.dumps(record2, default=str)}
     
-    SPECIFIC CONFLICTS: {json.dumps(conflicts)}
+    Known Conflicts Detected by Heuristics: {conflicts}
     
-    Based on the clinical flowchart, perform a tie-breaker decision.
+    Respond STRICTLY in the requested JSON format.
     """
-
+    
     try:
-        # Step 4: AI Reasons the Edge Case
         response = ollama.chat(model=MODEL_NAME, messages=[
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_content},
-        ], format='json')
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ])
         
-        return json.loads(response['message']['content'])
+        content = response['message']['content'].strip()
+        if content.startswith("```json"):
+            content = content[7:-3].strip()
+            
+        result = json.loads(content)
+        return result
     except Exception as e:
-        # Fallback if service is down/busy
-        logging.error(f"Local AI Error: {str(e)}")
+        logging.error(f"[AI SERVICE ERROR] {e}")
         return {
             "decision": "UNSURE",
-            "reasoning": f"AI Engine Exception: {str(e)}",
-            "confidence_score": 0.0,
+            "reasoning": "AI Service unavailable. Review required.",
+            "confidence_score": 0.5,
             "resolved_fields": {}
         }
 
+
 def explain_matching_logic(scores: dict) -> str:
-    """Uses LLM to generate a natural language explanation for match scores."""
-    prompt = f"Explain to a doctor why these similarity scores suggest a match: {json.dumps(scores)}. Keep it under 20 words."
-    
+    """Natural language summary of why two records were scored a certain way."""
+    prompt = f"""
+    Explain in one sentence why this pair scored {scores.get('confidence', 0)} based on these metrics: {scores}.
+    Be concise.
+    """
     try:
         response = ollama.generate(model=MODEL_NAME, prompt=prompt)
         return response['response'].strip()
-    except:
+    except Exception:
         return f"Weighted Score Analysis: {scores.get('confidence', 0)*100:.1f}% confidence."

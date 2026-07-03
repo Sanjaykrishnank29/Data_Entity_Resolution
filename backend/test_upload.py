@@ -1,11 +1,11 @@
 import httpx
 import time
 
-url = "http://127.0.0.1:8000/api/ingest/csv"
+url = "http://127.0.0.1:8001/api/ingest/csv"
 
 files_to_upload = [
-    r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\data\Source_A_Hospital (2).csv",
-    r"c:\Users\Jenilia Karen\Documents\Projects\Hackathon Projects\Infynd\datadna\data\Source_B_Lab (2).csv"
+    r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\data\Source_A_Hospital (2).csv",
+    r"c:\Users\DELL\Documents\Project\DNA\Data_Entity_Resolution\data\Source_B_Lab (2).csv"
 ]
 
 print("Starting concurrent file upload to Infynd Engine...")

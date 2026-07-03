@@ -1,15 +1,51 @@
 import re
 from datetime import datetime
 from dateutil import parser as dateutil_parser
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 # RULE 1: Configurable Source Authority
-# We trust Insurance for ID/DOB and CRM/Hospital for contact data
+# Trusted source identifiers per clinical field. The list may contain any of the following (case‑insensitive) identifiers that appear in the ``source`` attribute of a record:
+#   - source_a_hospital      (hospital‑record system)
+#   - source_b_lab           (clinical laboratory)
+#   - source_c_clinic        (outpatient clinic)
+#   - source_d_insurance     (insurance provider feed)
+#   - source_e_pharmacy      (pharmacy dispensing data)
+#   - source_f_emergency     (ER/urgent‑care system)
+#   - source_g_primary_care  (primary‑care EMR)
+# Add new identifiers here as data sources are integrated.
 SOURCE_AUTHORITY = {
-    "dob": ["source_d_insurance"],
-    "insurance_id": ["source_d_insurance"],
-    "phone": ["source_a_hospital"],
-    "email": ["source_a_hospital", "source_b_lab"]
+    "dob": [
+        "source_d_insurance", "source_h_state_registry", "source_i_vital_statistics", 
+        "source_g_primary_care", "source_a_hospital"
+    ],
+    "insurance_id": [
+        "source_d_insurance", "source_j_claims_clearinghouse", "source_k_medicaid_portal",
+        "source_l_medicare_feed"
+    ],
+    "phone": [
+        "source_a_hospital", "source_f_emergency", "source_g_primary_care", 
+        "source_m_patient_portal", "source_n_telehealth"
+    ],
+    "email": [
+        "source_m_patient_portal", "source_a_hospital", "source_b_lab", 
+        "source_g_primary_care", "source_n_telehealth"
+    ],
+    "name": [
+        "source_h_state_registry", "source_i_vital_statistics", "source_a_hospital", 
+        "source_c_clinic", "source_g_primary_care", "source_d_insurance"
+    ],
+    "address": [
+        "source_d_insurance", "source_g_primary_care", "source_c_clinic", 
+        "source_a_hospital", "source_m_patient_portal"
+    ],
+    "diagnosis": [
+        "source_b_lab", "source_a_hospital", "source_c_clinic", 
+        "source_o_specialist", "source_g_primary_care", "source_p_radiology"
+    ],
+    "allergy": [
+        "source_e_pharmacy", "source_q_e_prescribing", "source_a_hospital", 
+        "source_b_lab", "source_g_primary_care"
+    ]
 }
 
 def get_record_timestamp(record: dict):
@@ -19,7 +55,7 @@ def get_record_timestamp(record: dict):
     except:
         return datetime.min
 
-def resolve_clinical_field(records: List[Dict], field_name: str, norm_field: str = None) -> Dict:
+def resolve_clinical_field(records: List[Dict], field_name: str, norm_field: Optional[str] = None) -> Dict:
     """
     Unified decision engine following the Flowchart:
     Authority -> Recency -> Completeness -> LLM -> Audit
